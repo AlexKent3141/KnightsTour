@@ -1,5 +1,5 @@
 APP=knights
-CXXFLAGS=-Wall -std=c++11 -O3
+CXXFLAGS=-Wall -std=c++11 -O3 -g
 LDFLAGS=-lpthread
 
 src=$(wildcard *.cpp)

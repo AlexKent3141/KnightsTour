@@ -17,7 +17,7 @@ public:
     inline size_t SquaresVisited() const { return _numberOfMoves + 1; }
 
     // Get the available moves in the position.
-    std::vector<int> GetMoves() const;
+    int GetMoves(int*) const;
 
     // Make the specified knight move.
     void MakeMove(int);

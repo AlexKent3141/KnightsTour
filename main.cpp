@@ -7,11 +7,13 @@
 #include <thread>
 
 bool stopSearching = false;
+int** storage = nullptr;
 
-void FindSubTours(KnightBoard* board, int& numToursFound)
+void FindSubTours(KnightBoard* board, int& numToursFound, int level = 1)
 {
-    const auto& moves = board->GetMoves();
-    if (moves.size() == 0)
+    int* buf = storage[level];
+    int n = board->GetMoves(buf);
+    if (n == 0)
     {
         if (board->SquaresVisited() == board->TotalSquares())
         {
@@ -21,11 +23,11 @@ void FindSubTours(KnightBoard* board, int& numToursFound)
     }
     else
     {
-        for (size_t i = 0; i < moves.size() && !stopSearching; i++)
+        for (int i = 0; i < n && !stopSearching; i++)
         {
-            const auto& move = moves[i];
+            const auto& move = buf[i];
             board->MakeMove(move);
-            FindSubTours(board, numToursFound);
+            FindSubTours(board, numToursFound, level+1);
             board->UndoMove();
         }
     }
@@ -35,10 +37,11 @@ int FindTours(int N)
 {
     KnightBoard board(N);
     int numToursFound = 0;
-    const auto& moves = board.GetMoves();
-    for (size_t i = 0; i < moves.size() && !stopSearching; i++)
+    int* buf = storage[0];
+    int n = board.GetMoves(buf);
+    for (int i = 0; i < n && !stopSearching; i++)
     {
-        const auto& move = moves[i];
+        const auto& move = buf[i];
         board.MakeMove(move);
         FindSubTours(&board, numToursFound);
         board.UndoMove();
@@ -61,6 +64,29 @@ void PerfTest(int N)
     stopSearching = true;
 }
 
+void AllocateStorage(int N)
+{
+    const int MaxMoves = 8;
+    const int TourLength = N*N;
+
+    storage = new int*[TourLength];
+    for (int i = 0; i < TourLength; i++)
+    {
+        storage[i] = new int[MaxMoves];
+    }
+}
+
+void DeallocateStorage(int N)
+{
+    const int TourLength = N*N;
+    for (int i = 0; i < TourLength; i++)
+    {
+        delete[] storage[i];
+    }
+
+    delete[] storage;
+}
+
 // Arguments:
 // N - the dimension of the NxN board.
 // perf - execute performance test.
@@ -70,6 +96,10 @@ int main(int argc, char** argv)
     {
         int N = stoi(std::string(argv[1]));
         bool perf = argc > 2 && std::string(argv[2]) == "perf";
+
+        // Allocate sufficient memory.
+        AllocateStorage(N);
+
         if (perf)
         {
             PerfTest(N);
@@ -78,6 +108,8 @@ int main(int argc, char** argv)
         {
             FindTours(N);
         }
+
+        DeallocateStorage(N);
     }
     else
     {

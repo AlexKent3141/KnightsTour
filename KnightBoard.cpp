@@ -54,21 +54,22 @@ KnightBoard::~KnightBoard()
     }
 }
 
-std::vector<int> KnightBoard::GetMoves() const
+int KnightBoard::GetMoves(int* buf) const
 {
-    std::vector<int> moves;
-    for (int i = 0; i < 8; i++)
+    int n = 0;
+    const int MaxMoves = 8;
+    for (int i = 0; i < MaxMoves; i++)
     {
         int move = _directions[i];
         if (_board[_currentLoc + move] == 0)
         {
             // The target is on the board and has not been visited before.
-            moves.push_back(move);
+            buf[n++] = move;
         }
         
     }
 
-    return moves;
+    return n;
 }
 
 void KnightBoard::MakeMove(int move)
