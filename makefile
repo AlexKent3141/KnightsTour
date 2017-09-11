@@ -1,6 +1,6 @@
 APP=knights
 CXXFLAGS=-Wall -std=c++11 -O3 -g
-LDFLAGS=-lpthread
+LDFLAGS=-lpthread -lSDL
 
 src=$(wildcard *.cpp)
 obj=$(src:.cpp=.o)

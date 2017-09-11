@@ -2,12 +2,61 @@
 // moves which land on every square exactly once.
 
 #include "KnightBoard.h"
+#include "SDL/SDL.h"
 #include <iostream>
 #include <string>
 #include <thread>
 
 bool stopSearching = false;
 int** storage = nullptr;
+SDL_Surface* screen = nullptr;
+
+// This method initialises the window.
+void StartWindowMode()
+{
+    // Initialise SDL.
+    SDL_Init(SDL_INIT_VIDEO);
+
+    // Set the title.
+    SDL_WM_SetCaption("Knight's Tours", "Knight's Tours");
+
+    // Create window.
+    screen = SDL_SetVideoMode(640, 480, 0, 0);
+
+    // Handle input from the window.
+    SDL_Event event;
+    bool quit = false;
+    while (!quit)
+    {
+        if (SDL_PollEvent(&event))
+        {
+            switch (event.type)
+            {
+                case SDL_QUIT:
+                    stopSearching = true;
+                    quit = true;
+                    break;
+            }
+        }
+
+        SDL_Flip(screen);
+
+        // Show the latest tour.
+
+        // Wait for a short period.
+        const int TimeDelay = 100;
+        SDL_Delay(TimeDelay);
+    }
+}
+
+void CleanupWindow()
+{
+    if (screen != nullptr)
+    {
+        SDL_FreeSurface(screen);
+        SDL_Quit();
+    }
+}
 
 void FindSubTours(KnightBoard* board, int& numToursFound, int level = 1)
 {
@@ -18,7 +67,11 @@ void FindSubTours(KnightBoard* board, int& numToursFound, int level = 1)
         if (board->SquaresVisited() == board->TotalSquares())
         {
             ++numToursFound;
-            board->PrintMoves();
+            auto tour = board->LatestTour();
+            if (tour != nullptr)
+            {
+                std::cout << tour->ToString() << std::endl;
+            }
         }
     }
     else
@@ -52,11 +105,9 @@ int FindTours(int N)
     return numToursFound;
 }
 
+// Stop the search after a pre-determined amount of time.
 void PerfTest(int N)
 {
-    std::thread run(FindTours, N);
-    run.detach();
-
     const int TestTimeMs = 10000;
     std::chrono::milliseconds delay(TestTimeMs);
     std::this_thread::sleep_for(delay);
@@ -95,14 +146,27 @@ int main(int argc, char** argv)
     if (argc > 1)
     {
         int N = stoi(std::string(argv[1]));
-        bool perf = argc > 2 && std::string(argv[2]) == "perf";
+        bool perf = argc > 2 && std::string(argv[2]) == "--perf";
+        bool ui = argc > 2 && std::string(argv[2]) == "--ui";
 
         // Allocate sufficient memory.
         AllocateStorage(N);
 
-        if (perf)
+        if (perf || ui)
         {
-            PerfTest(N);
+            // Spawn a searching thread.
+            std::thread run(FindTours, N);
+            run.detach();
+
+            if (perf)
+            {
+                PerfTest(N);
+            }
+            else
+            {
+                // Show the window.
+                StartWindowMode();
+            }
         }
         else
         {
