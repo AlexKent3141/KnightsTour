@@ -2,14 +2,16 @@
 // moves which land on every square exactly once.
 
 #include "KnightBoard.h"
+#include "TourRenderer.h"
 #include "SDL/SDL.h"
 #include <iostream>
 #include <string>
 #include <thread>
 
 bool stopSearching = false;
+bool ui = false;
 int** storage = nullptr;
-SDL_Surface* screen = nullptr;
+TourRenderer renderer;
 
 // This method initialises the window.
 void StartWindowMode()
@@ -21,7 +23,12 @@ void StartWindowMode()
     SDL_WM_SetCaption("Knight's Tours", "Knight's Tours");
 
     // Create window.
-    screen = SDL_SetVideoMode(640, 480, 0, 0);
+    SDL_Surface* screen = SDL_SetVideoMode(640, 640, 0, 0);
+
+    // Set the back colour.
+    SDL_PixelFormat* fmt = screen->format;
+    const int Blue = SDL_MapRGB(fmt, 0, 0, 255);
+    SDL_FillRect(screen, NULL, Blue);
 
     // Handle input from the window.
     SDL_Event event;
@@ -42,19 +49,30 @@ void StartWindowMode()
         SDL_Flip(screen);
 
         // Show the latest tour.
+        renderer.Render(screen);
 
         // Wait for a short period.
         const int TimeDelay = 100;
         SDL_Delay(TimeDelay);
     }
+
+    SDL_FreeSurface(screen);
+    SDL_Quit();
 }
 
-void CleanupWindow()
+void OutputTour(KnightTour* tour)
 {
-    if (screen != nullptr)
+    if (tour != nullptr)
     {
-        SDL_FreeSurface(screen);
-        SDL_Quit();
+        if (ui)
+        {
+            // Display graphically.
+            renderer.SetTour(*tour);
+        }
+        else
+        {
+            std::cout << tour->ToString() << std::endl;
+        }
     }
 }
 
@@ -67,11 +85,7 @@ void FindSubTours(KnightBoard* board, int& numToursFound, int level = 1)
         if (board->SquaresVisited() == board->TotalSquares())
         {
             ++numToursFound;
-            auto tour = board->LatestTour();
-            if (tour != nullptr)
-            {
-                std::cout << tour->ToString() << std::endl;
-            }
+            OutputTour(board->LatestTour());
         }
     }
     else
@@ -147,7 +161,7 @@ int main(int argc, char** argv)
     {
         int N = stoi(std::string(argv[1]));
         bool perf = argc > 2 && std::string(argv[2]) == "--perf";
-        bool ui = argc > 2 && std::string(argv[2]) == "--ui";
+        ui = argc > 2 && std::string(argv[2]) == "--ui";
 
         // Allocate sufficient memory.
         AllocateStorage(N);

@@ -98,8 +98,8 @@ void KnightBoard::UndoMove()
 
 std::pair<int, int> KnightBoard::MakeCoord(int sq) const
 {
-    int row = sq % _paddedN - 1;
-    int col = sq / _paddedN - 1;
+    int row = sq % _paddedN - 2;
+    int col = sq / _paddedN - 2;
     return std::make_pair(col, row);
 }
 
