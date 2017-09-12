@@ -37,10 +37,17 @@ private:
     size_t _currentLoc;
 
     int* _board = nullptr;
+    int* _neighbours = nullptr;
     int* _directions = nullptr;
     int* _moves = nullptr;
 
     KnightTour* _latestTour = nullptr;
+
+    bool RemainsSolvable(int, int) const;
+
+    int CountNeighbours(int) const;
+
+    void InitialiseNeighbours();
 
     std::pair<int, int> MakeCoord(int) const;
 

@@ -29,6 +29,11 @@ KnightBoard::KnightBoard(int n) : _n(n)
         }
     }
 
+    _neighbours = new int[paddedSize];
+    memset(_neighbours, 0, paddedSize*sizeof(int));
+
+    InitialiseNeighbours();
+
     // Set the starting location for the tour.
     _currentLoc = 2*_paddedN+2;
     _board[_currentLoc] = 1;
@@ -36,29 +41,17 @@ KnightBoard::KnightBoard(int n) : _n(n)
 
 KnightBoard::~KnightBoard()
 {
-    if (_board != nullptr)
-    {
-        delete[] _board;
-        _board = nullptr;
-    }
-    
-    if (_directions != nullptr)
-    {
-        delete[] _directions;
-        _directions = nullptr;
-    }
-    
-    if (_moves != nullptr)
-    {
-        delete[] _moves;
-        _moves = nullptr;
-    }
+    if (_board != nullptr) delete[] _board;
+    if (_neighbours != nullptr) delete[] _neighbours;
+    if (_directions != nullptr) delete[] _directions;
+    if (_moves != nullptr) delete[] _moves;
+    if (_latestTour != nullptr) delete _latestTour;
 
-    if (_latestTour != nullptr)
-    {
-        delete _latestTour;
-        _latestTour = nullptr;
-    }
+    _board = nullptr;
+    _neighbours = nullptr;
+    _directions = nullptr;
+    _moves = nullptr;
+    _latestTour = nullptr;
 }
 
 int KnightBoard::GetMoves(int* buf) const
@@ -68,7 +61,8 @@ int KnightBoard::GetMoves(int* buf) const
     for (int i = 0; i < MaxMoves; i++)
     {
         int move = _directions[i];
-        if (_board[_currentLoc + move] == 0)
+        int dest = _currentLoc + move;
+        if (_board[dest] == 0 && RemainsSolvable(_currentLoc, dest))
         {
             // The target is on the board and has not been visited before.
             buf[n++] = move;
@@ -87,13 +81,83 @@ void KnightBoard::MakeMove(int move)
 
     // If this move completes a tour then store it.
     if (_numberOfMoves == _movesInTour) StoreTour();
+
+    // Decrease neighbours.
+    const int MaxMoves = 8;
+    for (int i = 0; i < MaxMoves; i++)
+    {
+        int n = _currentLoc + _directions[i];
+        if (_board[n] != OffBoard)
+        {
+            --_neighbours[n];
+        }
+    }
 }
 
 void KnightBoard::UndoMove()
 {
+    // Increase neighbours.
+    const int MaxMoves = 8;
+    for (int i = 0; i < MaxMoves; i++)
+    {
+        int n = _currentLoc + _directions[i];
+        if (_board[n] != OffBoard)
+        {
+            ++_neighbours[n];
+        }
+    }
+
     int move = _moves[--_numberOfMoves];
     --_board[_currentLoc];
     _currentLoc -= move;
+}
+
+// Check that the board still appears solvable after the specified destination.
+// We do this by confirming that the neighbours are still reachable.
+bool KnightBoard::RemainsSolvable(int source, int dest) const
+{
+    bool solvable = true;
+    if (SquaresVisited() < TotalSquares()-2)
+    {
+        // Check the neighbours of this square.
+        const int MaxMoves = 8;
+        for (int i = 0; i < MaxMoves; i++)
+        {
+            int n = dest + _directions[i];
+            if (_board[n] == 0 && _neighbours[n] <= 1)
+            {
+                solvable = false;
+                break;
+            }
+        }
+    }
+
+    return solvable;
+}
+
+int KnightBoard::CountNeighbours(int loc) const
+{
+    int count = 0;
+    const int MaxMoves = 8;
+    for (int i = 0; i < MaxMoves; i++)
+    {
+        int move = _directions[i];
+        if (_board[loc + move] != OffBoard) ++count;
+    }
+
+    return count;
+}
+
+void KnightBoard::InitialiseNeighbours()
+{
+    for (int r = 2; r < _paddedN-2; r++)
+    {
+        for (int c = 2; c < _paddedN-2; c++)
+        {
+            int loc = r*_paddedN+c;
+            _neighbours[loc] = CountNeighbours(loc);
+        }
+    }
 }
 
 std::pair<int, int> KnightBoard::MakeCoord(int sq) const
