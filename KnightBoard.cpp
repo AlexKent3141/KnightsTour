@@ -169,6 +169,8 @@ std::pair<int, int> KnightBoard::MakeCoord(int sq) const
 
 void KnightBoard::StoreTour()
 {
+    if (_latestTour != nullptr) delete _latestTour;
+
     std::vector<std::pair<int, int>> coords;
 
     int current = 2*_paddedN+2;
