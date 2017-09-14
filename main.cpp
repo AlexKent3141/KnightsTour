@@ -2,19 +2,18 @@
 // moves which land on every square exactly once.
 
 #include "KnightBoard.h"
+#include "TourFinder.h"
 #include "TourRenderer.h"
 #include "SDL/SDL.h"
 #include <iostream>
 #include <string>
 #include <thread>
 
-bool stopSearching = false;
 bool ui = false;
-int** storage = nullptr;
 TourRenderer renderer;
 
 // This method initialises the window.
-void StartWindowMode()
+void StartWindowMode(TourFinder* finder)
 {
     // Initialise SDL.
     SDL_Init(SDL_INIT_VIDEO);
@@ -40,7 +39,7 @@ void StartWindowMode()
             switch (event.type)
             {
                 case SDL_QUIT:
-                    stopSearching = true;
+                    finder->Stop();
                     quit = true;
                     break;
             }
@@ -76,80 +75,14 @@ void OutputTour(KnightTour* tour)
     }
 }
 
-void FindSubTours(KnightBoard* board, int& numToursFound, int level = 1)
-{
-    int* buf = storage[level];
-    int n = board->GetMoves(buf);
-    if (n == 0)
-    {
-        if (board->SquaresVisited() == board->TotalSquares())
-        {
-            ++numToursFound;
-            OutputTour(board->LatestTour());
-        }
-    }
-    else
-    {
-        for (int i = 0; i < n && !stopSearching; i++)
-        {
-            const auto& move = buf[i];
-            board->MakeMove(move);
-            FindSubTours(board, numToursFound, level+1);
-            board->UndoMove();
-        }
-    }
-}
-
-int FindTours(int N)
-{
-    KnightBoard board(N);
-    int numToursFound = 0;
-    int* buf = storage[0];
-    int n = board.GetMoves(buf);
-    for (int i = 0; i < n && !stopSearching; i++)
-    {
-        const auto& move = buf[i];
-        board.MakeMove(move);
-        FindSubTours(&board, numToursFound);
-        board.UndoMove();
-    }
-
-    std::cout << "Num tours found: " << numToursFound << std::endl;
-
-    return numToursFound;
-}
-
 // Stop the search after a pre-determined amount of time.
-void PerfTest(int N)
+void PerfTest(TourFinder* finder)
 {
     const int TestTimeMs = 10000;
     std::chrono::milliseconds delay(TestTimeMs);
     std::this_thread::sleep_for(delay);
 
-    stopSearching = true;
-}
-
-void AllocateStorage(int N)
-{
-    const int MaxMoves = 8;
-    const int TourLength = N*N;
-
-    storage = new int*[TourLength];
-    for (int i = 0; i < TourLength; i++)
-    {
-        storage[i] = new int[MaxMoves];
-    }
-}
-
-void DeallocateStorage(int N)
-{
-    const int TourLength = N*N;
-    for (int i = 0; i < TourLength; i++)
-    {
-        delete[] storage[i];
-    }
-
-    delete[] storage;
+    finder->Stop();
 }
 
 // Arguments:
@@ -163,31 +96,30 @@ int main(int argc, char** argv)
         bool perf = argc > 2 && std::string(argv[2]) == "--perf";
         ui = argc > 2 && std::string(argv[2]) == "--ui";
 
-        // Allocate sufficient memory.
-        AllocateStorage(N);
+        TourFinder* finder = new TourFinder(N, &OutputTour);
 
         if (perf || ui)
         {
             // Spawn a searching thread.
-            std::thread run(FindTours, N);
+            std::thread run([&] { finder->Start(); });
             run.detach();
 
             if (perf)
             {
-                PerfTest(N);
+                PerfTest(finder);
             }
             else
             {
                 // Show the window.
-                StartWindowMode();
+                StartWindowMode(finder);
             }
+
+            std::cout << "Num tours found: " << finder->NumToursFound() << std::endl;
         }
         else
         {
-            FindTours(N);
+            finder->Start();
         }
-
-        DeallocateStorage(N);
     }
     else
     {
