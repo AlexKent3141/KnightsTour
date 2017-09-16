@@ -114,7 +114,11 @@ int main(int argc, char** argv)
                 StartWindowMode(finder);
             }
 
-            std::cout << "Num tours found: " << finder->NumToursFound() << std::endl;
+            auto numTours = finder->ToursFoundAtPositions();
+            std::cout << "Num tours found: " << std::endl;
+            for (int n : numTours) std::cout << n << std::endl;
+
+            std::cout << "Total: " << finder->ToursFound() << std::endl;
         }
         else
         {

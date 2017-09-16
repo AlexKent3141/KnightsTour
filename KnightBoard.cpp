@@ -2,7 +2,9 @@
 #include <cstring>
 #include <iostream>
 
-KnightBoard::KnightBoard(int n) : _n(n)
+// Construct a KnightBoard with given dimensions.
+// The start of the tour is specified.
+KnightBoard::KnightBoard(int n, int startRow, int startCol) : _n(n)
 {
     _movesInTour = _n*_n - 1;
     _paddedN = _n + 4;
@@ -35,7 +37,8 @@ KnightBoard::KnightBoard(int n) : _n(n)
     InitialiseNeighbours();
 
     // Set the starting location for the tour.
-    _currentLoc = 2*_paddedN+2;
+    _initialLoc = (2+startRow)*_paddedN + 2+startCol;
+    _currentLoc = _initialLoc;
     _board[_currentLoc] = 1;
 }
 
@@ -173,7 +176,7 @@ void KnightBoard::StoreTour()
 
     std::vector<std::pair<int, int>> coords;
 
-    int current = 2*_paddedN+2;
+    int current = _initialLoc;
     coords.push_back(MakeCoord(current));
 
     for (size_t i = 0; i < _numberOfMoves; i++)

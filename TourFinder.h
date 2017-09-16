@@ -3,6 +3,7 @@
 
 #include "KnightBoard.h"
 #include "KnightTour.h"
+#include <vector>
 
 typedef void (*OnTourCallback)(KnightTour*);
 
@@ -14,23 +15,25 @@ public:
     TourFinder(int, OnTourCallback);
     ~TourFinder();
 
-    inline int NumToursFound() const { return _numToursFound; }
+    int ToursFound() const;
+    std::vector<int> ToursFoundAtPositions() const;
 
     void Start();
     void Stop();
 
 private:
     int _boardSize;
-    int _numToursFound;
     bool _stopSearching;
+    int* _toursFound = nullptr;
     int** _moveStorage = nullptr;
     OnTourCallback _callback;
 
     // Find tours (top level call).
-    void FindTours();
+    // Takes a start row/col as arguments.
+    int FindTours(int, int);
 
     // Recursively iterate through deeper levels.
-    void FindSubTours(KnightBoard*, int);
+    int FindSubTours(KnightBoard*, int);
 };
 
 #endif // __TOUR_FINDER_H__

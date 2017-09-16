@@ -11,7 +11,7 @@ class KnightBoard
 {
 public:
     KnightBoard() = delete;
-    KnightBoard(int);
+    KnightBoard(int, int, int);
     ~KnightBoard();
 
     inline size_t TotalSquares() const { return _n*_n; }
@@ -35,6 +35,7 @@ private:
     size_t _numberOfMoves = 0;
     size_t _movesInTour;
     size_t _currentLoc;
+    size_t _initialLoc;
 
     int* _board = nullptr;
     int* _neighbours = nullptr;
