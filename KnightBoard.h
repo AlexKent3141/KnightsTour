@@ -3,7 +3,7 @@
 
 #include "KnightTour.h"
 #include <cstdlib>
-#include <vector>
+#include <queue>
 #include <string>
 
 // This class stores the current board state and allows for backtracking.
@@ -19,7 +19,7 @@ public:
     inline KnightTour* LatestTour() { return _latestTour; }
 
     // Get the available moves in the position.
-    int GetMoves(int*) const;
+    int GetMoves(int*);
 
     // Make the specified knight move.
     void MakeMove(int);
@@ -38,17 +38,15 @@ private:
     size_t _initialLoc;
 
     int* _board = nullptr;
-    int* _neighbours = nullptr;
     int* _directions = nullptr;
     int* _moves = nullptr;
 
+    int* _temp = nullptr;
+    std::queue<int> _todo;
+
     KnightTour* _latestTour = nullptr;
 
-    bool RemainsSolvable(int, int) const;
-
-    int CountNeighbours(int) const;
-
-    void InitialiseNeighbours();
+    bool RemainsSolvable(int);
 
     std::pair<int, int> MakeCoord(int) const;
 
