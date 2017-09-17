@@ -96,47 +96,56 @@ bool KnightBoard::RemainsSolvable(int dest)
 {
     const int RestOfBoardSize = TotalSquares() - SquaresVisited() - 1;
 
-    // Pick one neighbour of the dest as a starting point.
-    const int MaxMoves = 8;
-    bool neighbourFound = false;
-    int n;
-    for (int i = 0; i < MaxMoves && !neighbourFound; i++)
-    {
-        n = dest + _directions[i];
-        neighbourFound = _board[n] == Empty;
-    }
-
-    if (!neighbourFound) return RestOfBoardSize == 0;
-
     // Duplicate the current occupancy state.
     memcpy(_temp, _board, _paddedN*_paddedN*sizeof(int));
     _temp[dest] = Visited;
+    int numNeighbours = 0;
 
-    // BFS from this neighbour and attempt to visit the whole board.
-    int visited = 0;
+    // Pick one neighbour of the dest as a starting point.
+    const int MaxMoves = 8;
+    int n;
+    for (int i = 0; i < MaxMoves; i++)
+    {
+        if (_board[dest + _directions[i]] == Empty)
+        {
+            n = dest + _directions[i];
+            _temp[n] |= Neighbour;
+            ++numNeighbours;
+        }
+    }
+
+    if (numNeighbours == 0) return RestOfBoardSize == 0;
+
+    // BFS from this neighbour and attempt to visit all neighbours.
     _todo.push(n);
-    _temp[n] = 1;
-    while (!_todo.empty())
+    _temp[n] = Visited;
+    int neighboursVisited = 1;
+    while (neighboursVisited < numNeighbours && !_todo.empty())
     {
         int loc = _todo.front();
         _todo.pop();
-
-        ++visited;
 
         // Consider the neighbours of this location.
         int next;
         for (int i = 0; i < MaxMoves; i++)
         {
             next = loc + _directions[i];
-            if (_temp[next] == Empty)
+            if (_temp[next] & Empty)
             {
+                if (_temp[next] & Neighbour)
+                {
+                    ++neighboursVisited;
+                }
+
                 _temp[next] = Visited;
                 _todo.push(next);
             }
         }
     }
 
-    return visited == RestOfBoardSize;
+    while (!_todo.empty()) _todo.pop();
+
+    return neighboursVisited == numNeighbours;
 }
 
 std::pair<int, int> KnightBoard::MakeCoord(int sq) const

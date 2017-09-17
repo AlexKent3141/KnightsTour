@@ -28,9 +28,10 @@ public:
     void UndoMove();
 
 private:
-    const int OffBoard = -1;
-    const int Empty = 0;
-    const int Visited = 1;
+    const int OffBoard = 0;
+    const int Empty = 1;
+    const int Visited = 2;
+    const int Neighbour = 4;
 
     int _n;
     int _paddedN; // Pad with off-board squares for easier edge detection.
