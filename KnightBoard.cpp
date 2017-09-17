@@ -26,7 +26,7 @@ KnightBoard::KnightBoard(int n, int startRow, int startCol) : _n(n)
     {
         for (int c = 2; c < _paddedN-2; c++)
         {
-            _board[r*_paddedN+c] = 0;
+            _board[r*_paddedN+c] = Empty;
         }
     }
 
@@ -36,7 +36,7 @@ KnightBoard::KnightBoard(int n, int startRow, int startCol) : _n(n)
     // Set the starting location for the tour.
     _initialLoc = (2+startRow)*_paddedN + 2+startCol;
     _currentLoc = _initialLoc;
-    _board[_currentLoc] = 1;
+    _board[_currentLoc] = Visited;
 }
 
 KnightBoard::~KnightBoard()
@@ -62,7 +62,7 @@ int KnightBoard::GetMoves(int* buf)
     {
         int move = _directions[i];
         int dest = _currentLoc + move;
-        if (_board[dest] == 0 && RemainsSolvable(dest))
+        if (_board[dest] == Empty && RemainsSolvable(dest))
         {
             // The target is on the board and has not been visited before.
             buf[n++] = move;
@@ -76,7 +76,7 @@ int KnightBoard::GetMoves(int* buf)
 void KnightBoard::MakeMove(int move)
 {
     _currentLoc += move;
-    ++_board[_currentLoc];
+    _board[_currentLoc] = Visited;
     _moves[_numberOfMoves++] = move;
 
     // If this move completes a tour then store it.
@@ -86,7 +86,7 @@ void KnightBoard::MakeMove(int move)
 void KnightBoard::UndoMove()
 {
     int move = _moves[--_numberOfMoves];
-    --_board[_currentLoc];
+    _board[_currentLoc] = Empty;
     _currentLoc -= move;
 }
 
@@ -103,14 +103,14 @@ bool KnightBoard::RemainsSolvable(int dest)
     for (int i = 0; i < MaxMoves && !neighbourFound; i++)
     {
         n = dest + _directions[i];
-        neighbourFound = _board[n] == 0;
+        neighbourFound = _board[n] == Empty;
     }
 
     if (!neighbourFound) return RestOfBoardSize == 0;
 
     // Duplicate the current occupancy state.
     memcpy(_temp, _board, _paddedN*_paddedN*sizeof(int));
-    _temp[dest] = 1;
+    _temp[dest] = Visited;
 
     // BFS from this neighbour and attempt to visit the whole board.
     int visited = 0;
@@ -128,9 +128,9 @@ bool KnightBoard::RemainsSolvable(int dest)
         for (int i = 0; i < MaxMoves; i++)
         {
             next = loc + _directions[i];
-            if (_temp[next] == 0)
+            if (_temp[next] == Empty)
             {
-                _temp[next] = 1;
+                _temp[next] = Visited;
                 _todo.push(next);
             }
         }

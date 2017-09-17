@@ -29,6 +29,8 @@ public:
 
 private:
     const int OffBoard = -1;
+    const int Empty = 0;
+    const int Visited = 1;
 
     int _n;
     int _paddedN; // Pad with off-board squares for easier edge detection.
