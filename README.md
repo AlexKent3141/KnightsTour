@@ -15,5 +15,9 @@ The program is capable of enumerating all Knight's Tours on a 6x6 board in a few
 The next step (unless I can think of further algorithmic improvements) is to parallelise the search.
 
 # Next Features
-- Generalise to rectangular boards (current square only)
-- Enumerate Eulerian Tours 
+- Support rectangular boards (currently square boards only)
+- Enumerate Eulerian Tours
+
+# Examples
+![TourImage1](Examples/6x6Tour.png "6x6 Knight's Tour")
+![TourImage2](Examples/8x8Tour.png "8x8 Knight's Tour")
