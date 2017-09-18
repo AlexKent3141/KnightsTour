@@ -28,6 +28,8 @@ private:
     int** _moveStorage = nullptr;
     OnTourCallback _callback;
 
+    void StoreSymmetries(int, int, int);
+
     // Find tours (top level call).
     // Takes a start row/col as arguments.
     int FindTours(int, int);

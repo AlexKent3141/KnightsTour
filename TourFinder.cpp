@@ -66,11 +66,17 @@ void TourFinder::Start()
     const int BoardArea = _boardSize * _boardSize;
     memset(_toursFound, 0, BoardArea*sizeof(int));
 
-    for (int r = 0; r < _boardSize; r++)
+    // Only need to look at a triangular region - the rest can be inferred by symmetry.
+    const int RowsMax = _boardSize % 2 ? _boardSize/2 : _boardSize/2 - 1;
+    for (int r = 0; r <= RowsMax; r++)
     {
-        for (int c = 0; c < _boardSize; c++)
+        for (int c = 0; c <= r; c++)
         {
-            _toursFound[_boardSize*r+c] = FindTours(r, c);
+            int tours = FindTours(r, c);
+
+            // Store this in all symmetric positions.
+            StoreSymmetries(r, c, tours);
+            StoreSymmetries(c, r, tours);
         }
     }
 }
@@ -78,6 +84,15 @@ void TourFinder::Start()
 void TourFinder::Stop()
 {
     _stopSearching = true;
+}
+
+void TourFinder::StoreSymmetries(int r, int c, int tours)
+{
+    int ir = _boardSize-r-1, ic = _boardSize-c-1;
+    _toursFound[_boardSize*r + c] = tours;
+    _toursFound[_boardSize*r + ic] = tours;
+    _toursFound[_boardSize*ir + c] = tours;
+    _toursFound[_boardSize*ir + ic] = tours;
 }
 
 int TourFinder::FindTours(int startRow, int startCol)
